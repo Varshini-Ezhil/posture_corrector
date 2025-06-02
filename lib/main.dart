@@ -32,7 +32,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   // Replace with your Render URL
-  static const String url = 'https://your-app-name.onrender.com/command';
+  static const String url = 'http://192.168.29.253:5000/api';
   final TextEditingController _degreeController = TextEditingController();
 
   final Map<String, bool> buttonStates = {
@@ -49,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final response = await http.post(
         Uri.parse(url),
         body: {
-          'command': command,
+          'value': command,
           'degree': _degreeController.text, // Send the degree value
         },
       );

@@ -2,49 +2,49 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
+
+# Store the latest value in memory
+latest_value = None
 
 @app.route('/', methods=['GET'])
 def home():
-    return "Server is running!"
+    # Display the server status along with the latest value
+    return f"""
+    <html>
+        <head><title>Posture Corrector</title></head>
+        <body>
+            <h1>Server is running!</h1>
+            
+        </body>
+    </html>
+    """
 
-@app.route('/command', methods=['POST', 'OPTIONS'])
-def handle_command():
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'POST')
-        return response
+@app.route('/api', methods=['POST', 'GET'])
+def receive_value():
+    global latest_value
 
-    command = request.form.get('command')
-    degree = request.form.get('degree', '')
-    print(f"Received command: {command}, Degree: {degree}")
-    
-    command_messages = {
-        'tl': 'Temperature Left ON',
-        'TL': 'Temperature Left OFF',
-        'tr': 'Temperature Right ON',
-        'TR': 'Temperature Right OFF',
-        'tb': 'Temperature Both ON',
-        'TB': 'Temperature Both OFF',
-        'vl': 'Vibration Left ON',
-        'VL': 'Vibration Left OFF',
-        'vr': 'Vibration Right ON',
-        'VR': 'Vibration Right OFF',
-        'vb': 'Vibration Both ON',
-        'VB': 'Vibration Both OFF'
-    }
-    
-    if command in command_messages:
-        print(f"{command_messages[command]} with degree: {degree}")
-    
-    return jsonify({
-        "status": "success", 
-        "command": command,
-        "degree": degree
-    })
+    if request.method == 'POST':
+        # Handle POST request
+        value = request.form.get('value')  # Get the 'value' from the POST request
+        degree = request.form.get('degree')  # Get the 'degree' from the POST request
+        if value and degree:
+            latest_value = {'value': value, 'degree': degree}
+            print(f"Received value: {value}, degree: {degree}")
+            return jsonify({'status': 'success', 'message': f'Value {value} and degree {degree} received'}), 200
+        elif value:
+            latest_value = {'value': value}
+            print(f"Received value: {value}")
+            return jsonify({'status': 'success', 'message': f'Value {value} received'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'No value or degree received'}), 400
 
+    elif request.method == 'GET':
+        # Handle GET request
+        if latest_value:
+            return jsonify({'status': 'success', 'data': latest_value}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'No value available'}), 400
 
 if __name__ == '__main__':
-    # Enable debug mode and listen on all interfaces
     app.run(host='0.0.0.0', port=5000, debug=True)
