@@ -9,13 +9,22 @@ latest_value = None
 
 @app.route('/', methods=['GET'])
 def home():
-    # Display the server status along with the latest value
+    global latest_value
+
+    if latest_value:
+        value_display = f"""
+            <p><strong>Value:</strong> {latest_value.get('value', 'N/A')}</p>
+            <p><strong>Degree:</strong> {latest_value.get('degree', 'N/A')}</p>
+        """
+    else:
+        value_display = "<p>No data received yet.</p>"
+
     return f"""
     <html>
         <head><title>Posture Corrector</title></head>
         <body>
             <h1>Server is running!</h1>
-            
+            {value_display}
         </body>
     </html>
     """
@@ -26,8 +35,9 @@ def receive_value():
 
     if request.method == 'POST':
         # Handle POST request
-        value = request.form.get('value')  # Get the 'value' from the POST request
-        degree = request.form.get('degree')  # Get the 'degree' from the POST request
+        value = request.form.get('value')
+        degree = request.form.get('degree')
+
         if value and degree:
             latest_value = {'value': value, 'degree': degree}
             print(f"Received value: {value}, degree: {degree}")
