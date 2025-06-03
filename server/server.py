@@ -7,52 +7,36 @@ CORS(app)
 # Store the latest value in memory
 latest_value = None
 
-@app.route('/', methods=['GET'])
-def home():
-    global latest_value
-
-    if latest_value:
-        value_display = f"""
-            <p><strong>Value:</strong> {latest_value.get('value', 'N/A')}</p>
-            <p><strong>Degree:</strong> {latest_value.get('degree', 'N/A')}</p>
-        """
-    else:
-        value_display = "<p>No data received yet.</p>"
-
-    return f"""
-    <html>
-        <head><title>Posture Corrector</title></head>
-        <body>
-            <h1>Server is running!</h1>
-            {value_display}
-        </body>
-    </html>
-    """
-
 @app.route('/api', methods=['POST', 'GET'])
 def receive_value():
     global latest_value
 
     if request.method == 'POST':
         # Handle POST request
-        value = request.form.get('value')
-        degree = request.form.get('degree')
+        value = request.form.get('value')  # Get the 'value' from the POST request
+        degree = request.form.get('degree')  # Get the 'degree' from the POST request
 
         if value and degree:
-            latest_value = {'value': value, 'degree': degree}
+            latest_value = {'command': value, 'degree': int(degree)}
             print(f"Received value: {value}, degree: {degree}")
-            return jsonify({'status': 'success', 'message': f'Value {value} and degree {degree} received'}), 200
+            return jsonify({'command': value, 'degree': int(degree), 'status': 'success'}), 200
         elif value:
-            latest_value = {'value': value}
+            latest_value = {'command': value}
             print(f"Received value: {value}")
-            return jsonify({'status': 'success', 'message': f'Value {value} received'}), 200
+            return jsonify({'command': value, 'status': 'success'}), 200
         else:
             return jsonify({'status': 'error', 'message': 'No value or degree received'}), 400
 
     elif request.method == 'GET':
         # Handle GET request
         if latest_value:
-            return jsonify({'status': 'success', 'data': latest_value}), 200
+            # Flatten the response to match the desired format
+            response = {
+                'command': latest_value.get('command'),
+                'degree': latest_value.get('degree'),
+                'status': 'success'
+            }
+            return jsonify(response), 200
         else:
             return jsonify({'status': 'error', 'message': 'No value available'}), 400
 
